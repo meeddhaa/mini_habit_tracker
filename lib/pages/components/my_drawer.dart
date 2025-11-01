@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/database/habit_database.dart';
 import 'package:mini_habit_tracker/pages/models/habit.dart';
+import 'package:mini_habit_tracker/util/habit_util.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -78,9 +79,14 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.tertiary,
         child: const Icon(Icons.add),
       ),
-body: _buildHabitList,
+body: _buildHabitList(),
     );
   }
+
+  //build habit list
+  Widget  _buildHabitList() {
+    //habit db
+
 
   //build habit list
   Widget  _buildHabitList() {
@@ -98,8 +104,16 @@ final habit = currenthabits[index];
 
     //check if the habit is completed today
 
-bool isCompletedToday = isHabitCompletedToday();
+final completedDates = habit.completedDays.map((ms) => DateTime.fromMillisecondsSinceEpoch(ms)).toList();
+bool isCompletedToday = isHabitCompletedToday(completedDates);
     // return habit title UI
+    return ListTile(
+      title: Text(habit.name),
+      trailing: Icon(
+        isCompletedToday ? Icons.check_circle : Icons.radio_button_unchecked,
+        color: isCompletedToday ? Colors.green : Colors.grey,
+      ),
+    );
   },
 );
   }
