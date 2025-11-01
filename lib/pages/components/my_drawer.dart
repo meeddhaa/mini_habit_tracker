@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/database/habit_database.dart';
+import 'package:mini_habit_tracker/pages/models/habit.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  void initState() {
+   // read existing habits from database
+   Provider.of<HabitDatabase>(context, listen: false).readHabits();
+    super.initState();
+  }
   State<HomePage> createState() => _HomePageState();
 }
 
@@ -72,6 +78,29 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.tertiary,
         child: const Icon(Icons.add),
       ),
+body: _buildHabitList,
     );
+  }
+
+  //build habit list
+  Widget  _buildHabitList() {
+    //habit db
+
+final habitDatabase = context.watch<HabitDatabase>();
+    //current habits
+List<Habit> currenthabits = habitDatabase.currentHabits;
+// return list of habits ui
+return ListView.builder(
+  itemCount: currenthabits.length,
+  itemBuilder: (context, index) {
+    //get individual habit
+final habit = currenthabits[index];
+
+    //check if the habit is completed today
+
+bool isCompletedToday = isHabitCompletedToday();
+    // return habit title UI
+  },
+);
   }
 }
