@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AddHabitPage extends StatelessWidget {
-  const AddHabitPage({Key? key}) : super(key: key);
+  const AddHabitPage({super.key});
 
   @override
   Widget build(BuildContext context) {
