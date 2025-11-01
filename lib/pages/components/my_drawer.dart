@@ -8,11 +8,6 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  void initState() {
-   // read existing habits from database
-   Provider.of<HabitDatabase>(context, listen: false).readHabits();
-    super.initState();
-  }
   State<HomePage> createState() => _HomePageState();
 }
 
@@ -21,14 +16,14 @@ final TextEditingController textEditingController = TextEditingController();
 
 // create new habit
 void createNewHabit(BuildContext context) {
-  final TextEditingController TextController = TextEditingController();
+  final TextEditingController textController = TextEditingController();
 
   showDialog(
     context: context,
     builder:
         (context) => AlertDialog(
           content: TextField(
-            controller: TextController,
+            controller: textController,
             decoration: const InputDecoration(hintText: "Create a new Habit"),
           ),
           actions: [
@@ -36,7 +31,7 @@ void createNewHabit(BuildContext context) {
             MaterialButton(
               onPressed: () {
                 // get the new habit name
-                String newHabitName = TextController.text;
+                String newHabitName = textController.text;
 
                 // save to db
                 context.read<HabitDatabase>().addHabit(newHabitName);
@@ -45,7 +40,7 @@ void createNewHabit(BuildContext context) {
                 Navigator.pop(context);
 
                 // clear controller
-                TextController.clear();
+                textController.clear();
               },
               child: const Text('Save'),
             ),
@@ -57,7 +52,7 @@ void createNewHabit(BuildContext context) {
                 Navigator.pop(context);
 
                 // clear controller
-                TextController.clear();
+                textController.clear();
               },
               child: const Text('Cancel'),
             ),
@@ -68,53 +63,61 @@ void createNewHabit(BuildContext context) {
 
 class _HomePageState extends State<HomePage> {
   @override
+  void initState() {
+    super.initState();
+    // read existing habits from database
+    Provider.of<HabitDatabase>(context, listen: false).readHabits();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(),
-      drawer: const HomePage(),
+      drawer: const Drawer(), // fixed recursion issue
       floatingActionButton: FloatingActionButton(
         onPressed: () => createNewHabit(context),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.tertiary,
         child: const Icon(Icons.add),
       ),
-body: _buildHabitList(),
+      body: _buildHabitList(),
     );
   }
 
-  //build habit list
-  Widget  _buildHabitList() {
-    //habit db
+  // build habit list
+  Widget _buildHabitList() {
+    // habit db
+    final habitDatabase = context.watch<HabitDatabase>();
 
+    // current habits
+    List<Habit> currentHabits = habitDatabase.currentHabits;
 
-  //build habit list
-  Widget  _buildHabitList() {
-    //habit db
+    // return list of habits UI
+    return ListView.builder(
+      itemCount: currentHabits.length,
+      itemBuilder: (context, index) {
+        // get individual habit
+        final habit = currentHabits[index];
 
-final habitDatabase = context.watch<HabitDatabase>();
-    //current habits
-List<Habit> currenthabits = habitDatabase.currentHabits;
-// return list of habits ui
-return ListView.builder(
-  itemCount: currenthabits.length,
-  itemBuilder: (context, index) {
-    //get individual habit
-final habit = currenthabits[index];
+        // check if the habit is completed today
+        final completedDates =
+            habit.completedDays
+                .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
+                .toList();
 
-    //check if the habit is completed today
+        bool isCompletedToday = isHabitCompletedToday(completedDates);
 
-final completedDates = habit.completedDays.map((ms) => DateTime.fromMillisecondsSinceEpoch(ms)).toList();
-bool isCompletedToday = isHabitCompletedToday(completedDates);
-    // return habit title UI
-    return ListTile(
-      title: Text(habit.name),
-      trailing: Icon(
-        isCompletedToday ? Icons.check_circle : Icons.radio_button_unchecked,
-        color: isCompletedToday ? Colors.green : Colors.grey,
-      ),
+        // return habit title UI
+        return ListTile(
+          title: Text(
+            habit.name,
+            style: TextStyle(
+              decoration: isCompletedToday ? TextDecoration.lineThrough : null,
+            ),
+          ),
+        );
+      },
     );
-  },
-);
   }
 }
