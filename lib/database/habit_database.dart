@@ -31,31 +31,22 @@ class HabitDatabase extends ChangeNotifier {
     return settings?.firstLaunchDate;
   }
 
-  /*
-  ───────────────────────────────
-   C R U D   O P E R A T I O N S
-  ───────────────────────────────
-  */
-
   // List of habits in memory
   final List<Habit> currentHabits = [];
 
   // CREATE - Add new habit
   Future<void> addHabit(String habitName) async {
-    final newHabit =
-        Habit(name: '')
-          ..name = habitName
-          ..completedDays = [];
+    final newHabit = Habit(name: '')..name = habitName..completedDays = [];
 
     await isar.writeTxn(() async {
       await isar.habits.put(newHabit);
     });
 
-    await readHabits(); // refresh local list
+    await readHabits();
     notifyListeners();
   }
 
-  // READ - Load all habits from DB
+  // READ - Load all habits
   Future<void> readHabits() async {
     final fetchedHabits = await isar.habits.where().findAll();
     currentHabits
@@ -67,7 +58,6 @@ class HabitDatabase extends ChangeNotifier {
   // UPDATE - Toggle habit completion
   Future<void> updateHabitCompletion(int id, bool isCompleted) async {
     final habit = await isar.habits.get(id);
-
     if (habit == null) return;
 
     await isar.writeTxn(() async {

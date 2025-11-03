@@ -35,8 +35,10 @@ class _HomePageState extends State<HomePage> {
             actions: [
               MaterialButton(
                 onPressed: () {
-                  String newHabitName = textController.text;
-                  context.read<HabitDatabase>().addHabit(newHabitName);
+                  final newHabitName = textController.text.trim();
+                  if (newHabitName.isNotEmpty) {
+                    context.read<HabitDatabase>().addHabit(newHabitName);
+                  }
                   Navigator.pop(context);
                   textController.clear();
                 },
@@ -73,11 +75,13 @@ class _HomePageState extends State<HomePage> {
             actions: [
               MaterialButton(
                 onPressed: () {
-                  String updatedHabitName = textController.text;
-                  context.read<HabitDatabase>().updateHabitName(
-                    habit.id,
-                    updatedHabitName,
-                  );
+                  final updatedName = textController.text.trim();
+                  if (updatedName.isNotEmpty) {
+                    context.read<HabitDatabase>().updateHabitName(
+                      habit.id,
+                      updatedName,
+                    );
+                  }
                   Navigator.pop(context);
                   textController.clear();
                 },
@@ -101,9 +105,7 @@ class _HomePageState extends State<HomePage> {
       builder:
           (context) => AlertDialog(
             title: const Text('Delete Habit'),
-            content: const Text(
-              'Are you sure you want to get rid of this habit?',
-            ),
+            content: const Text('Are you sure you want to remove this habit?'),
             actions: [
               MaterialButton(
                 onPressed: () {
@@ -124,48 +126,62 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHabitList() {
-    final habitDatabase = context.watch<HabitDatabase>();
-    List<Habit> currentHabits = habitDatabase.currentHabits;
+    return Consumer<HabitDatabase>(
+      builder: (context, db, _) {
+        final habits = db.currentHabits;
+        if (habits.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Center(child: Text("No habits yet. Add one!")),
+          );
+        }
 
-    return ListView.builder(
-      itemCount: currentHabits.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, index) {
-        final habit = currentHabits[index];
-        final completedDates =
-            habit.completedDays
-                .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
-                .toList();
+        return ListView.builder(
+          itemCount: habits.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            final habit = habits[index];
+            final completedDates =
+                habit.completedDays
+                    .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
+                    .toList();
+            final isCompletedToday = isHabitCompletedToday(completedDates);
 
-        bool isCompletedToday = isHabitCompletedToday(completedDates);
-
-        return MyHabitTile(
-          text: habit.name,
-          isHabitCompletedToday: isCompletedToday,
-          onChanged: (value) => checkHabitOnOff(value, habit),
-          editHabit: (context) => editHabitBox(habit),
-          deleteHabit: (context) => deleteHabitBox(habit),
+            return MyHabitTile(
+              text: habit.name,
+              isHabitCompletedToday: isCompletedToday,
+              onChanged: (value) => checkHabitOnOff(value, habit),
+              editHabit: (context) => editHabitBox(habit),
+              deleteHabit: (context) => deleteHabitBox(habit),
+            );
+          },
         );
       },
     );
   }
 
   Widget _buildHeatMap() {
-    final habitDatabase = context.watch<HabitDatabase>();
-    List<Habit> currentHabits = habitDatabase.currentHabits;
+    return Consumer<HabitDatabase>(
+      builder: (context, db, _) {
+        if (db.currentHabits.isEmpty) return const SizedBox.shrink();
 
-    return FutureBuilder<DateTime?>(
-      future: habitDatabase.getFirstLaunchDate(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return MyHeatMap(
-            startDate: snapshot.data!,
-            datasets: prepHeatmapDataset(currentHabits),
-          );
-        } else {
-          return Container();
-        }
+        return FutureBuilder<DateTime?>(
+          future: db.getFirstLaunchDate(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return Container();
+
+            final startDate = snapshot.data!; // keep local
+            final heatmapData = prepHeatmapDataset(db.currentHabits);
+
+            // Debug: print dataset
+            heatmapData.forEach((key, value) {
+              print("Heatmap key: $key value: $value");
+            });
+
+            return MyHeatMap(startDate: startDate, datasets: heatmapData);
+          },
+        );
       },
     );
   }
@@ -196,7 +212,13 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.tertiary,
         child: const Icon(Icons.add),
       ),
-      body: ListView(children: [_buildHeatMap(), _buildHabitList()]),
+      body: ListView(
+        children: [
+          _buildHeatMap(),
+          const SizedBox(height: 10),
+          _buildHabitList(),
+        ],
+      ),
     );
   }
 }

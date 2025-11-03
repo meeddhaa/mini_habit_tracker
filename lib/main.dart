@@ -1,17 +1,16 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/database/habit_database.dart';
+import 'package:mini_habit_tracker/pages/add_habit_page.dart';
+import 'package:mini_habit_tracker/pages/home_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
-import 'pages/add_habit_page.dart';
-import 'pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // initialize database
   await HabitDatabase.initialize();
   await HabitDatabase().saveFirstLaunchDate();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
