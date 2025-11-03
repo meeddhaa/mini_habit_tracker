@@ -1,30 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/pages/theme/dark_mode.dart';
-
-import 'light_mode.dart';
+import 'package:mini_habit_tracker/pages/theme/light_mode.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  //initially set to light mode
+  // initially set to light mode
   ThemeData _themeData = lightMode;
 
-  //get the curent theme
-  ThemeData getTheme() => _themeData;
+  // get current theme
+  ThemeData get themeData => _themeData;
 
-  //is dark mode ?
+  // check if dark mode is active
   bool get isDarkMode => _themeData == darkMode;
 
-  // set theme
-  set themeData(ThemeData themeData) {
-    _themeData = themeData;
-    notifyListeners();
-  }
-
-  //toggle between light and dark mode
+  // toggle between light and dark mode
   void toggleTheme() {
     if (_themeData == lightMode) {
       _themeData = darkMode;
     } else {
       _themeData = lightMode;
     }
+    notifyListeners();
   }
 }
+

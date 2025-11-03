@@ -10,18 +10,16 @@ import 'pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   // initialize database
   await HabitDatabase.initialize();
   await HabitDatabase().saveFirstLaunchDate();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Wrap MyApp with ChangeNotifierProvider
   runApp(
     MultiProvider(
       providers: [
-        //habit provider
         ChangeNotifierProvider(create: (context) => HabitDatabase()),
-        //theme provider
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
       child: const MyApp(),
@@ -39,11 +37,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Mini Habit Tracker',
-      theme: themeProvider.themeData, 
+      theme: themeProvider.themeData,
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
-
         '/addHabit': (context) => const AddHabitPage(),
       },
     );
