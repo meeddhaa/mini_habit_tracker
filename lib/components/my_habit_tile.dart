@@ -85,7 +85,7 @@ class _MyHabitTileState extends State<MyHabitTile> {
                 style: TextStyle(
                   color:
                       isCompleted
-                          ? Colors.white
+                          ? Colors.black
                           : Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
