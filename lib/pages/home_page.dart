@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/components/my_habit_tile.dart';
+import 'package:mini_habit_tracker/components/my_heatmap.dart' show MyHeatMap;
 import 'package:mini_habit_tracker/database/habit_database.dart';
 import 'package:mini_habit_tracker/pages/models/habit.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
@@ -25,31 +26,30 @@ class _HomePageState extends State<HomePage> {
   void createNewHabit(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Create a new Habit"),
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  String newHabitName = textController.text;
-                  context.read<HabitDatabase>().addHabit(newHabitName);
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(hintText: "Create a new Habit"),
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              String newHabitName = textController.text;
+              context.read<HabitDatabase>().addHabit(newHabitName);
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Save'),
           ),
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -63,62 +63,60 @@ class _HomePageState extends State<HomePage> {
     textController.text = habit.name;
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Edit Habit Name"),
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  String updatedHabitName = textController.text;
-                  context.read<HabitDatabase>().updateHabitName(
-                    habit.id,
-                    updatedHabitName,
-                  );
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(hintText: "Edit Habit Name"),
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              String updatedHabitName = textController.text;
+              context.read<HabitDatabase>().updateHabitName(
+                habit.id,
+                updatedHabitName,
+              );
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Save'),
           ),
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
   void deleteHabitBox(Habit habit) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete Habit'),
-            content: const Text(
-              'Are you sure you want to get rid of this habit?',
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  context.read<HabitDatabase>().deleteHabit(habit.id);
-                  Navigator.pop(context);
-                },
-                child: const Text('Delete'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Habit'),
+        content: const Text(
+          'Are you sure you want to get rid of this habit?',
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              context.read<HabitDatabase>().deleteHabit(habit.id);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete'),
           ),
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -128,12 +126,13 @@ class _HomePageState extends State<HomePage> {
 
     return ListView.builder(
       itemCount: currentHabits.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         final habit = currentHabits[index];
-        final completedDates =
-            habit.completedDays
-                .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
-                .toList();
+        final completedDates = habit.completedDays
+            .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
+            .toList();
 
         bool isCompletedToday = isHabitCompletedToday(completedDates);
 
@@ -144,6 +143,25 @@ class _HomePageState extends State<HomePage> {
           editHabit: (context) => editHabitBox(habit),
           deleteHabit: (context) => deleteHabitBox(habit),
         );
+      },
+    );
+  }
+
+  Widget _buildHeatMap() {
+    final habitDatabase = context.watch<HabitDatabase>();
+    List<Habit> currentHabits = habitDatabase.currentHabits;
+
+    return FutureBuilder<DateTime?>(
+      future: habitDatabase.getFirstLaunchDate(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return MyHeatMap(
+            startDate: snapshot.data!,
+            datasets: prepHeatmapDataset(currentHabits),
+          );
+        } else {
+          return Container();
+        }
       },
     );
   }
@@ -174,7 +192,12 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.tertiary,
         child: const Icon(Icons.add),
       ),
-      body: _buildHabitList(),
+      body: ListView(
+        children: [
+          _buildHeatMap(),
+          _buildHabitList(),
+        ],
+      ),
     );
   }
 }
