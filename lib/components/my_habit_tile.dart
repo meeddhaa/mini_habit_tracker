@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
@@ -43,42 +44,49 @@ class _MyHabitTileState extends State<MyHabitTile> {
   Widget build(BuildContext context) {
     return Slidable(
       endActionPane: ActionPane(
-        motion: const StrechMotion(),
+        motion: const StretchMotion(), // fixed typo: StrechMotion → StretchMotion
         children: [
           // edit option
           SlidableAction(
-            onPressed: editHabit,
+            onPressed: widget.editHabit,
             backgroundColor: Colors.grey.shade800,
             icon: Icons.settings,
             borderRadius: BorderRadius.circular(8),
           ),
           // delete option
-
           SlidableAction(
-            onPressed: deleteHabit,
+            onPressed: widget.deleteHabit,
             backgroundColor: Colors.red.shade400,
             icon: Icons.delete,
             borderRadius: BorderRadius.circular(8),
-          )
-          child: GestureDetector(context)
-        ]
-      onTap: toggleCompletion,
-      child: Container(
-        decoration: BoxDecoration(
-          color:
-              isCompleted
-                  ? const Color.fromARGB(255, 149, 117, 237)
-                  : Theme.of(context).colorScheme.secondary,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
-        child: ListTile(
-          title: Text(widget.text),
-          leading: Checkbox(
-            activeColor: const Color.fromARGB(255, 168, 180, 246),
-            value: isCompleted,
-            onChanged: (_) => toggleCompletion(),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: toggleCompletion,
+        child: Container(
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? const Color.fromARGB(255, 149, 117, 237)
+                : Theme.of(context).colorScheme.secondary,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
+          child: ListTile(
+            title: Text(
+              widget.text,
+              style: TextStyle(
+                color: isCompleted
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSecondary,
+              ),
+            ),
+            leading: Checkbox(
+              activeColor: const Color.fromARGB(255, 168, 180, 246),
+              value: isCompleted,
+              onChanged: (_) => toggleCompletion(),
+            ),
           ),
         ),
       ),
