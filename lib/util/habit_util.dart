@@ -21,6 +21,7 @@ Map<DateTime, int> prepHeatmapDataset(List<Habit> habits) {
 
       // Normalize date to avoid time mismatches
       final normalizedDate = DateTime(date.year, date.month, date.day);
+;
 
       // Increment the count if date already exists
       if (dataset.containsKey(normalizedDate)) {
