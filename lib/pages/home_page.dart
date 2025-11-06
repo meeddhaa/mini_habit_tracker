@@ -7,6 +7,7 @@ import 'package:mini_habit_tracker/pages/progress_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:mini_habit_tracker/util/habit_util.dart';
 import 'package:provider/provider.dart';
+import 'package:mini_habit_tracker/util/notification_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,33 +28,32 @@ class _HomePageState extends State<HomePage> {
   void createNewHabit(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Create a new Habit"),
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  final newHabitName = textController.text.trim();
-                  if (newHabitName.isNotEmpty) {
-                    context.read<HabitDatabase>().addHabit(newHabitName);
-                  }
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(hintText: "Create a new Habit"),
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              final newHabitName = textController.text.trim();
+              if (newHabitName.isNotEmpty) {
+                context.read<HabitDatabase>().addHabit(newHabitName);
+              }
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Save'),
           ),
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -67,62 +67,66 @@ class _HomePageState extends State<HomePage> {
     textController.text = habit.name;
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Edit Habit Name"),
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  final updatedName = textController.text.trim();
-                  if (updatedName.isNotEmpty) {
-                    context.read<HabitDatabase>().updateHabitName(
+      builder: (context) => AlertDialog(
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(hintText: "Edit Habit Name"),
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              final updatedName = textController.text.trim();
+              if (updatedName.isNotEmpty) {
+                context.read<HabitDatabase>().updateHabitName(
                       habit.id,
                       updatedName,
                     );
-                  }
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+              }
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Save'),
           ),
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
   void deleteHabitBox(Habit habit) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete Habit'),
-            content: const Text('Are you sure you want to remove this habit?'),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  context.read<HabitDatabase>().deleteHabit(habit.id);
-                  Navigator.pop(context);
-                },
-                child: const Text('Delete'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Habit'),
+        content: const Text('Are you sure you want to remove this habit?'),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              context.read<HabitDatabase>().deleteHabit(habit.id);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete'),
           ),
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              NotificationHelper().showDailyReminder(20, 30); // reminder at 8:30 PM
+            },
+            child: const Text("Set Daily Reminder"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -133,7 +137,7 @@ class _HomePageState extends State<HomePage> {
         if (habits.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(20.0),
-            child: Center(child: Text("No habits yet. Add one!")),
+            child: Center(child: Text("No habits yet? Add one!")),
           );
         }
 
@@ -155,7 +159,7 @@ class _HomePageState extends State<HomePage> {
               onChanged: (value) => checkHabitOnOff(value, habit),
               editHabit: (context) => editHabitBox(habit),
               deleteHabit: (context) => deleteHabitBox(habit),
-              completedDays: [],
+              completedDays: completedDates,
             );
           },
         );
