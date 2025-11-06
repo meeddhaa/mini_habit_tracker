@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:mini_habit_tracker/util/habit_util.dart';
 
 class MyHabitTile extends StatefulWidget {
   final String text;
   final bool isHabitCompletedToday;
+  final List<DateTime> completedDays; // <-- added property for streak
   final void Function(bool?)? onChanged;
   final void Function(BuildContext)? editHabit;
   final void Function(BuildContext)? deleteHabit;
@@ -12,6 +14,7 @@ class MyHabitTile extends StatefulWidget {
     super.key,
     required this.text,
     required this.isHabitCompletedToday,
+    required this.completedDays, // <-- added
     required this.onChanged,
     required this.editHabit,
     required this.deleteHabit,
@@ -45,7 +48,7 @@ class _MyHabitTileState extends State<MyHabitTile> {
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 25.0),
       child: Slidable(
         endActionPane: ActionPane(
-          motion: const StretchMotion(), // fixed typo
+          motion: const StretchMotion(),
           children: [
             // edit option
             SlidableAction(
@@ -67,10 +70,9 @@ class _MyHabitTileState extends State<MyHabitTile> {
           onTap: toggleCompletion,
           child: Container(
             decoration: BoxDecoration(
-              color:
-                  isCompleted
-                      ? const Color.fromARGB(255, 201, 132, 240)
-                      : Theme.of(context).colorScheme.secondary,
+              color: isCompleted
+                  ? const Color.fromARGB(255, 201, 132, 240)
+                  : Theme.of(context).colorScheme.secondary,
               borderRadius: BorderRadius.circular(12),
             ),
             padding: const EdgeInsets.all(16.0),
@@ -80,14 +82,26 @@ class _MyHabitTileState extends State<MyHabitTile> {
                 value: isCompleted,
                 onChanged: (_) => toggleCompletion(),
               ),
-              title: Text(
-                widget.text,
-                style: TextStyle(
-                  color:
-                      isCompleted
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.text,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isCompleted
                           ? Colors.black
                           : Theme.of(context).colorScheme.inversePrimary,
-                ),
+                    ),
+                  ),
+                  // Display streak
+                  Text(
+                    '🔥 ${calculateStreak(widget.completedDays)} day streak',
+                    style: const TextStyle(
+                        color: Colors.orangeAccent, fontSize: 14),
+                  ),
+                ],
               ),
             ),
           ),

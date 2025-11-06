@@ -3,6 +3,7 @@ import 'package:mini_habit_tracker/components/my_habit_tile.dart';
 import 'package:mini_habit_tracker/components/my_heatmap.dart';
 import 'package:mini_habit_tracker/database/habit_database.dart';
 import 'package:mini_habit_tracker/pages/models/habit.dart';
+import 'package:mini_habit_tracker/pages/progress_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:mini_habit_tracker/util/habit_util.dart';
 import 'package:provider/provider.dart';
@@ -154,6 +155,7 @@ class _HomePageState extends State<HomePage> {
               onChanged: (value) => checkHabitOnOff(value, habit),
               editHabit: (context) => editHabitBox(habit),
               deleteHabit: (context) => deleteHabitBox(habit),
+              completedDays: [],
             );
           },
         );
@@ -171,7 +173,7 @@ class _HomePageState extends State<HomePage> {
           builder: (context, snapshot) {
             if (!snapshot.hasData) return Container();
 
-            final startDate = snapshot.data!; // keep local
+            final startDate = snapshot.data!;
             final heatmapData = prepHeatmapDataset(db.currentHabits);
 
             // Debug: print dataset
@@ -205,7 +207,38 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      drawer: const Drawer(),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text(
+                'Mini Habit Tracker',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.show_chart),
+              title: const Text('Progress Analytics'),
+              onTap: () {
+                Navigator.pop(context); // close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProgressPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => createNewHabit(context),
         elevation: 0,
@@ -213,6 +246,7 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.add),
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           _buildHeatMap(),
           const SizedBox(height: 10),
