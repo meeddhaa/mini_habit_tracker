@@ -1,67 +1,92 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tzData;
 
 class NotificationHelper {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   NotificationHelper() {
-    _initializeNotifications();
+    _init();
   }
 
-  Future<void> _initializeNotifications() async {
-    // Initialize timezone
-    tz.initializeTimeZones();
+  void _init() async {
+    tzData.initializeTimeZones();
 
-    // Android initialization settings
-    const AndroidInitializationSettings initializationSettingsAndroid =
+    const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS initialization settings
-    const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings();
+    const InitializationSettings initSettings =
+        InitializationSettings(android: androidSettings);
 
-    // Combine platform settings
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
-
-    // Initialize plugin
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    await flutterLocalNotificationsPlugin.initialize(initSettings);
   }
 
   Future<void> showDailyReminder(int hour, int minute) async {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      'Daily Reminder',
-      'Don\'t forget to check your habits today!',
-      _nextInstanceOfTime(hour, minute),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_reminder_channel',
-          'Daily Reminders',
-          channelDescription: 'Channel for daily habit reminders',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+      'daily_reminder_channel',
+      'Daily Reminders',
+      channelDescription: 'Daily habit reminders',
+      importance: Importance.max,
+      priority: Priority.high,
     );
+
+    const NotificationDetails platformDetails =
+        NotificationDetails(android: androidDetails);
+
+    if (Platform.isAndroid) {
+      try {
+        // Try exact alarm first
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          0,
+          'Habit Reminder',
+          'Time to check your habits!',
+          _nextInstanceOfTime(hour: hour, minute: minute),
+          platformDetails,
+          androidAllowWhileIdle: true,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+        );
+      } catch (e) {
+        debugPrint(
+            "Exact alarm not permitted, falling back to approximate reminder: $e");
+
+        // Fallback to approximate daily reminder
+        await flutterLocalNotificationsPlugin.periodicallyShow(
+          0,
+          'Habit Reminder',
+          'Time to check your habits!',
+          RepeatInterval.daily,
+          platformDetails,
+          androidAllowWhileIdle: true,
+        );
+      }
+    } else {
+      // iOS fallback
+      await flutterLocalNotificationsPlugin.periodicallyShow(
+        0,
+        'Habit Reminder',
+        'Time to check your habits!',
+        RepeatInterval.daily,
+        platformDetails,
+        androidAllowWhileIdle: true,
+      );
+    }
   }
 
-  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
+  tz.TZDateTime _nextInstanceOfTime({required int hour, required int minute}) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate =
+    tz.TZDateTime scheduled =
         tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
     }
-    return scheduledDate;
+    return scheduled;
   }
 }
+
