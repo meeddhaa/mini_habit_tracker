@@ -8,6 +8,8 @@ import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:mini_habit_tracker/util/habit_util.dart';
 import 'package:provider/provider.dart';
 import 'package:mini_habit_tracker/util/notification_helper.dart';
+import 'package:mini_habit_tracker/pages/notepad_page.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,11 +20,21 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController textController = TextEditingController();
+  final NotificationHelper notificationHelper = NotificationHelper();
 
   @override
   void initState() {
     super.initState();
     Provider.of<HabitDatabase>(context, listen: false).readHabits();
+
+    // Schedule a daily notification for testing (1 min from now)
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await notificationHelper.showDailyReminder(
+        DateTime.now().hour,
+        DateTime.now().minute + 1,
+        context,
+      );
+    });
   }
 
   void createNewHabit(BuildContext context) {
@@ -121,7 +133,8 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton(
             onPressed: () {
-              NotificationHelper().showDailyReminder(20, 30); // reminder at 8:30 PM
+              // Set manual daily reminder at 8:30 PM
+              notificationHelper.showDailyReminder(20, 30, context);
             },
             child: const Text("Set Daily Reminder"),
           ),
@@ -148,9 +161,7 @@ class _HomePageState extends State<HomePage> {
           itemBuilder: (context, index) {
             final habit = habits[index];
             final completedDates =
-                habit.completedDays
-                    .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
-                    .toList();
+                habit.completedDays.map((ms) => DateTime.fromMillisecondsSinceEpoch(ms)).toList();
             final isCompletedToday = isHabitCompletedToday(completedDates);
 
             return MyHabitTile(
@@ -216,7 +227,7 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
+              decoration: BoxDecoration(color: Color.fromARGB(255, 125, 57, 214)),
               child: Text(
                 'Mini Habit Tracker',
                 style: TextStyle(color: Colors.white, fontSize: 24),
@@ -226,13 +237,26 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.show_chart),
               title: const Text('Progress Analytics'),
               onTap: () {
-                Navigator.pop(context); // close the drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ProgressPage()),
                 );
               },
             ),
+            ListTile(
+  leading: const Icon(Icons.note),
+  title: const Text('Notepad'),
+  onTap: () {
+    Navigator.pop(context); // close drawer
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotepadPage()),
+    );
+  },
+),
+
+
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),

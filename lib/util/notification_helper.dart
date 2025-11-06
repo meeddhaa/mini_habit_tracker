@@ -25,7 +25,7 @@ class NotificationHelper {
     await flutterLocalNotificationsPlugin.initialize(initSettings);
   }
 
-  Future<void> showDailyReminder(int hour, int minute) async {
+  Future<void> showDailyReminder(int hour, int minute, BuildContext context) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
       'daily_reminder_channel',
@@ -37,6 +37,8 @@ class NotificationHelper {
 
     const NotificationDetails platformDetails =
         NotificationDetails(android: androidDetails);
+
+    bool exactScheduled = false;
 
     if (Platform.isAndroid) {
       try {
@@ -52,6 +54,7 @@ class NotificationHelper {
               UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: DateTimeComponents.time,
         );
+        exactScheduled = true;
       } catch (e) {
         debugPrint(
             "Exact alarm not permitted, falling back to approximate reminder: $e");
@@ -77,6 +80,16 @@ class NotificationHelper {
         androidAllowWhileIdle: true,
       );
     }
+
+    // Show an in-app toast/snackbar for testing
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(exactScheduled
+            ? 'Exact daily reminder scheduled!'
+            : 'Approximate daily reminder scheduled!'),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   tz.TZDateTime _nextInstanceOfTime({required int hour, required int minute}) {
@@ -89,4 +102,5 @@ class NotificationHelper {
     return scheduled;
   }
 }
+
 

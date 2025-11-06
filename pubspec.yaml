@@ -23,7 +23,7 @@ dependencies:
   # Default icons for iOS-style UI
   cupertino_icons: ^1.0.8
 
-  # Firebase dependencies (updated)
+  # Firebase dependencies
   firebase_core: ^3.5.0
   firebase_auth: ^5.3.2
   cloud_firestore: ^5.5.0
@@ -40,16 +40,14 @@ dependencies:
   flutter_slidable: ^4.0.3
   flutter_heatmap_calendar: ^1.0.5
 
+  # Shared preferences for Notepad
+  shared_preferences: ^2.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
+  # Lints & code generators
   flutter_lints: ^5.0.0
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.13

@@ -6,6 +6,7 @@ import 'package:mini_habit_tracker/pages/home_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:mini_habit_tracker/util/notification_helper.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'firebase_options.dart';
 
@@ -19,12 +20,11 @@ Future<void> main() async {
   await HabitDatabase.initialize();
   await HabitDatabase().saveFirstLaunchDate();
 
-  // Initialize timezone and notifications
+  // Initialize timezone
   tz.initializeTimeZones();
   final notificationHelper = NotificationHelper();
 
-  // Schedule a daily reminder at 10:00 AM
-  await notificationHelper.showDailyReminder(10, 0);
+
 
   runApp(
     MultiProvider(
