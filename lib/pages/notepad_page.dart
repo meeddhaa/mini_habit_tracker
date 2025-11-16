@@ -152,7 +152,9 @@ class _NotepadPageState extends State<NotepadPage> {
       ..sort((a, b) => DateTime.parse(grouped[b]![0]['date'])
           .compareTo(DateTime.parse(grouped[a]![0]['date'])));
     Map<String, List<Map<String, dynamic>>> sortedGrouped = {};
-    for (var k in sortedKeys) sortedGrouped[k] = grouped[k]!;
+    for (var k in sortedKeys) {
+      sortedGrouped[k] = grouped[k]!;
+    }
 
     return sortedGrouped;
   }
@@ -223,7 +225,7 @@ class _NotepadPageState extends State<NotepadPage> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                     const SizedBox(height: 16),
                   ],
                 );

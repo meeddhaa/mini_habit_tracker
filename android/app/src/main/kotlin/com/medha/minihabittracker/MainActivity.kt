@@ -1,4 +1,5 @@
-package com.example.mini_habit_tracker
+package com.medha.minihabittracker
+
 
 import io.flutter.embedding.android.FlutterActivity
 

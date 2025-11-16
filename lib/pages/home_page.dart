@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:mini_habit_tracker/util/notification_helper.dart';
 import 'package:mini_habit_tracker/pages/notepad_page.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -25,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // Load habits from local Isar database
     Provider.of<HabitDatabase>(context, listen: false).readHabits();
 
     // Schedule a daily notification for testing (1 min from now)
@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
           decoration: const InputDecoration(hintText: "Create a new Habit"),
         ),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
               final newHabitName = textController.text.trim();
               if (newHabitName.isNotEmpty) {
@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
             },
             child: const Text('Save'),
           ),
-          MaterialButton(
+          TextButton(
             onPressed: () {
               Navigator.pop(context);
               textController.clear();
@@ -85,7 +85,7 @@ class _HomePageState extends State<HomePage> {
           decoration: const InputDecoration(hintText: "Edit Habit Name"),
         ),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
               final updatedName = textController.text.trim();
               if (updatedName.isNotEmpty) {
@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage> {
             },
             child: const Text('Save'),
           ),
-          MaterialButton(
+          TextButton(
             onPressed: () {
               Navigator.pop(context);
               textController.clear();
@@ -118,14 +118,14 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Delete Habit'),
         content: const Text('Are you sure you want to remove this habit?'),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
               context.read<HabitDatabase>().deleteHabit(habit.id);
               Navigator.pop(context);
             },
             child: const Text('Delete'),
           ),
-          MaterialButton(
+          TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
@@ -133,7 +133,7 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Set manual daily reminder at 8:30 PM
+              // Optional: Set daily reminder at a fixed time (8:30 PM)
               notificationHelper.showDailyReminder(20, 30, context);
             },
             child: const Text("Set Daily Reminder"),
@@ -160,8 +160,9 @@ class _HomePageState extends State<HomePage> {
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
             final habit = habits[index];
-            final completedDates =
-                habit.completedDays.map((ms) => DateTime.fromMillisecondsSinceEpoch(ms)).toList();
+            final completedDates = habit.completedDays
+                .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
+                .toList();
             final isCompletedToday = isHabitCompletedToday(completedDates);
 
             return MyHabitTile(
@@ -191,10 +192,8 @@ class _HomePageState extends State<HomePage> {
             final startDate = snapshot.data!;
             final heatmapData = prepHeatmapDataset(db.currentHabits);
 
-            // Debug: print dataset
-            heatmapData.forEach((key, value) {
-              print("Heatmap key: $key value: $value");
-            });
+            // Optional debug print
+            // heatmapData.forEach((key, value) => print("Heatmap key: $key value: $value"));
 
             return MyHeatMap(startDate: startDate, datasets: heatmapData);
           },
@@ -245,18 +244,16 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             ListTile(
-  leading: const Icon(Icons.note),
-  title: const Text('Notepad'),
-  onTap: () {
-    Navigator.pop(context); // close drawer
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const NotepadPage()),
-    );
-  },
-),
-
-
+              leading: const Icon(Icons.note),
+              title: const Text('Notepad'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotepadPage()),
+                );
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
