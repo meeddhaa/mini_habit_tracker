@@ -171,7 +171,7 @@ class _HomePageState extends State<HomePage> {
       builder:
           (context) => AlertDialog(
             title: const Text('Delete Habit'),
-            content: const Text('Are you sure you want to remove this habit?'),
+            content: const Text('Are you sure you want to get rid of this habit?'),
             actions: [
               // Secondary Action Button (Set Reminder)
               TextButton(
