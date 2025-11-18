@@ -1,17 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/database/firestore_habit_service.dart';
-
 import 'package:mini_habit_tracker/database/habit_database.dart';
-// Firestore service
 import 'package:mini_habit_tracker/pages/add_habit_page.dart';
-import 'package:mini_habit_tracker/pages/home_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
-import 'package:mini_habit_tracker/util/notification_helper.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mini_habit_tracker/auth/auth_gate.dart'; // CRITICAL: The Authentication Listener
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,13 +15,8 @@ Future<void> main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Sign in user anonymously
-  try {
-    await FirebaseAuth.instance.signInAnonymously();
-  } catch (e) {
-    print('Firebase Auth failed: $e');
-    // Continue without authentication for now
-  }
+  // --- ANONYMOUS SIGN-IN REMOVED ---
+  // The app now relies on the AuthGate to check for user login status.
 
   // Initialize local database (Isar)
   await HabitDatabase.initialize();
@@ -33,20 +24,19 @@ Future<void> main() async {
 
   // Initialize timezone
   tz.initializeTimeZones();
-  final notificationHelper = NotificationHelper();
-
+  
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (context) => HabitDatabase(),
-        ), // local Isar DB
+        ), // Local Isar DB
         Provider(
           create: (context) => FirestoreHabitService(),
         ), // Firestore service
         ChangeNotifierProvider(
           create: (context) => ThemeProvider(),
-        ), // theme provider
+        ), // Theme provider
       ],
       child: const MyApp(),
     ),
@@ -64,9 +54,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Mini Habit Tracker',
       theme: themeProvider.themeData,
-      initialRoute: '/',
+      
+      // CRITICAL CHANGE: AuthGate is the entry point
+      // It decides whether to show the HomePage or LoginOrRegisterPage
+      home: const AuthGate(),
+      
       routes: {
-        '/': (context) => const HomePage(),
         '/addHabit': (context) => const AddHabitPage(),
       },
     );

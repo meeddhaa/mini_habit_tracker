@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/components/my_habit_tile.dart';
 import 'package:mini_habit_tracker/components/my_heatmap.dart';
@@ -45,7 +46,6 @@ class _HomePageState extends State<HomePage> {
     textController.clear();
   }
 
-  // --- CREATE NEW HABIT DIALOG ---
   // --- CREATE NEW HABIT DIALOG (USING BOTTOM SHEET) ---
   void createNewHabit(BuildContext context) {
     showModalBottomSheet(
@@ -164,25 +164,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- DELETE HABIT DIALOG ---
+  // --- CORRECTED DELETE HABIT DIALOG ---
   void deleteHabitBox(Habit habit) {
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
             title: const Text('Delete Habit'),
-            content: const Text('Are you sure you want to get rid of this habit?'),
+            content: const Text('Are you sure you want to remove this habit?'),
             actions: [
-              // Secondary Action Button (Set Reminder)
-              TextButton(
-                onPressed: () {
-                  // Optional: Set daily reminder at a fixed time (8:30 PM)
-                  notificationHelper.showDailyReminder(20, 30, context);
-                  // Added pop to close this dialog after setting the reminder
-                  Navigator.pop(context);
-                },
-                child: const Text("Set Daily Reminder"),
-              ),
               // CANCEL BUTTON
               TextButton(
                 onPressed: () {
@@ -285,10 +275,32 @@ class _HomePageState extends State<HomePage> {
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Mini Habit Tracker'),
         actions: [
+          // 1. Theme Switch
           Switch(
             value: themeProvider.isDarkMode,
             onChanged: (value) => themeProvider.toggleTheme(),
             activeColor: Theme.of(context).colorScheme.inversePrimary,
+          ),
+          // 2. LOGOUT BUTTON (NEW)
+         // 2. LOGOUT BUTTON
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async { // <-- ADD async HERE
+              try {
+                // Ensure we explicitly wait for the sign-out call to complete
+                await FirebaseAuth.instance.signOut(); 
+                
+                // The AuthGate should automatically handle navigation
+                // Nothing else is needed here if AuthGate is set up correctly.
+                
+              } catch (e) {
+                // Optional: Show an error if logout fails (e.g., no internet)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error logging out: $e')),
+                );
+              }
+            },
           ),
         ],
       ),
