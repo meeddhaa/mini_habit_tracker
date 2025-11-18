@@ -6,14 +6,20 @@ class FirestoreHabitService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Ensure the user is signed in (anonymous for now)
-  Future<String> signInAnonymously() async {
-    final userCredential = await _auth.signInAnonymously();
-    return userCredential.user!.uid;
+  Future<String?> signInAnonymously() async {
+    try {
+      final userCredential = await _auth.signInAnonymously();
+      return userCredential.user!.uid;
+    } catch (e) {
+      print('Firebase Auth failed: $e');
+      return null;
+    }
   }
 
   // Add a new habit
   Future<void> addHabit(String title) async {
     final uid = _auth.currentUser?.uid ?? await signInAnonymously();
+    if (uid == null) return; // Skip if auth failed
     await _firestore.collection('users').doc(uid).collection('habits').add({
       'title': title,
       'created_at': FieldValue.serverTimestamp(),
@@ -25,7 +31,12 @@ class FirestoreHabitService {
   // Mark habit as completed today
   Future<void> markCompleted(String habitId) async {
     final uid = _auth.currentUser?.uid ?? await signInAnonymously();
-    final docRef = _firestore.collection('users').doc(uid).collection('habits').doc(habitId);
+    if (uid == null) return; // Skip if auth failed
+    final docRef = _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('habits')
+        .doc(habitId);
     await docRef.update({
       'completed_dates': FieldValue.arrayUnion([Timestamp.now()]),
     });
@@ -34,7 +45,13 @@ class FirestoreHabitService {
   // Delete a habit
   Future<void> deleteHabit(String habitId) async {
     final uid = _auth.currentUser?.uid ?? await signInAnonymously();
-    await _firestore.collection('users').doc(uid).collection('habits').doc(habitId).delete();
+    if (uid == null) return; // Skip if auth failed
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('habits')
+        .doc(habitId)
+        .delete();
   }
 
   // Stream all habits

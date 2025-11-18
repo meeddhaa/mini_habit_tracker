@@ -20,7 +20,12 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Sign in user anonymously
-  await FirebaseAuth.instance.signInAnonymously();
+  try {
+    await FirebaseAuth.instance.signInAnonymously();
+  } catch (e) {
+    print('Firebase Auth failed: $e');
+    // Continue without authentication for now
+  }
 
   // Initialize local database (Isar)
   await HabitDatabase.initialize();
@@ -33,9 +38,15 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => HabitDatabase()), // local Isar DB
-        Provider(create: (context) => FirestoreHabitService()), // Firestore service
-        ChangeNotifierProvider(create: (context) => ThemeProvider()), // theme provider
+        ChangeNotifierProvider(
+          create: (context) => HabitDatabase(),
+        ), // local Isar DB
+        Provider(
+          create: (context) => FirestoreHabitService(),
+        ), // Firestore service
+        ChangeNotifierProvider(
+          create: (context) => ThemeProvider(),
+        ), // theme provider
       ],
       child: const MyApp(),
     ),
