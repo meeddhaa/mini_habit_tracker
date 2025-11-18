@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'mini-habit-tracker-app.firebasestorage.app',
     measurementId: 'G-0T4MLWTB30',
   );
+
 }

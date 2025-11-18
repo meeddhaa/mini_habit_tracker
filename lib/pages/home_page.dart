@@ -3,9 +3,12 @@ import 'package:mini_habit_tracker/components/my_habit_tile.dart';
 import 'package:mini_habit_tracker/components/my_heatmap.dart';
 import 'package:mini_habit_tracker/database/habit_database.dart';
 import 'package:mini_habit_tracker/pages/models/habit.dart';
+import 'package:mini_habit_tracker/pages/progress_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:mini_habit_tracker/util/habit_util.dart';
 import 'package:provider/provider.dart';
+import 'package:mini_habit_tracker/util/notification_helper.dart';
+import 'package:mini_habit_tracker/pages/notepad_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,43 +19,53 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController textController = TextEditingController();
+  final NotificationHelper notificationHelper = NotificationHelper();
 
   @override
   void initState() {
     super.initState();
+    // Load habits from local Isar database
     Provider.of<HabitDatabase>(context, listen: false).readHabits();
+
+    // Schedule a daily notification for testing (1 min from now)
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await notificationHelper.showDailyReminder(
+        DateTime.now().hour,
+        DateTime.now().minute + 1,
+        context,
+      );
+    });
   }
 
   void createNewHabit(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Create a new Habit"),
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  final newHabitName = textController.text.trim();
-                  if (newHabitName.isNotEmpty) {
-                    context.read<HabitDatabase>().addHabit(newHabitName);
-                  }
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(hintText: "Create a new Habit"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final newHabitName = textController.text.trim();
+              if (newHabitName.isNotEmpty) {
+                context.read<HabitDatabase>().addHabit(newHabitName);
+              }
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Save'),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -66,62 +79,67 @@ class _HomePageState extends State<HomePage> {
     textController.text = habit.name;
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Edit Habit Name"),
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  final updatedName = textController.text.trim();
-                  if (updatedName.isNotEmpty) {
-                    context.read<HabitDatabase>().updateHabitName(
+      builder: (context) => AlertDialog(
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(hintText: "Edit Habit Name"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final updatedName = textController.text.trim();
+              if (updatedName.isNotEmpty) {
+                context.read<HabitDatabase>().updateHabitName(
                       habit.id,
                       updatedName,
                     );
-                  }
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+              }
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Save'),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              textController.clear();
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
   void deleteHabitBox(Habit habit) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete Habit'),
-            content: const Text('Are you sure you want to remove this habit?'),
-            actions: [
-              MaterialButton(
-                onPressed: () {
-                  context.read<HabitDatabase>().deleteHabit(habit.id);
-                  Navigator.pop(context);
-                },
-                child: const Text('Delete'),
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Habit'),
+        content: const Text('Are you sure you want to remove this habit?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              context.read<HabitDatabase>().deleteHabit(habit.id);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete'),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Optional: Set daily reminder at a fixed time (8:30 PM)
+              notificationHelper.showDailyReminder(20, 30, context);
+            },
+            child: const Text("Set Daily Reminder"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -132,7 +150,7 @@ class _HomePageState extends State<HomePage> {
         if (habits.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(20.0),
-            child: Center(child: Text("No habits yet. Add one!")),
+            child: Center(child: Text("No habits yet? Add one!")),
           );
         }
 
@@ -142,10 +160,9 @@ class _HomePageState extends State<HomePage> {
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
             final habit = habits[index];
-            final completedDates =
-                habit.completedDays
-                    .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
-                    .toList();
+            final completedDates = habit.completedDays
+                .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
+                .toList();
             final isCompletedToday = isHabitCompletedToday(completedDates);
 
             return MyHabitTile(
@@ -154,6 +171,7 @@ class _HomePageState extends State<HomePage> {
               onChanged: (value) => checkHabitOnOff(value, habit),
               editHabit: (context) => editHabitBox(habit),
               deleteHabit: (context) => deleteHabitBox(habit),
+              completedDays: completedDates,
             );
           },
         );
@@ -171,13 +189,11 @@ class _HomePageState extends State<HomePage> {
           builder: (context, snapshot) {
             if (!snapshot.hasData) return Container();
 
-            final startDate = snapshot.data!; // keep local
+            final startDate = snapshot.data!;
             final heatmapData = prepHeatmapDataset(db.currentHabits);
 
-            // Debug: print dataset
-            heatmapData.forEach((key, value) {
-              print("Heatmap key: $key value: $value");
-            });
+            // Optional debug print
+            // heatmapData.forEach((key, value) => print("Heatmap key: $key value: $value"));
 
             return MyHeatMap(startDate: startDate, datasets: heatmapData);
           },
@@ -205,7 +221,49 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      drawer: const Drawer(),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Color.fromARGB(255, 125, 57, 214)),
+              child: Text(
+                'Mini Habit Tracker',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.show_chart),
+              title: const Text('Progress Analytics'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProgressPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.note),
+              title: const Text('Notepad'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotepadPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => createNewHabit(context),
         elevation: 0,
@@ -213,6 +271,7 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.add),
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           _buildHeatMap(),
           const SizedBox(height: 10),
