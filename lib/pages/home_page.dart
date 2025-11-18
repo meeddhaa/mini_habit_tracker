@@ -29,43 +29,47 @@ class _HomePageState extends State<HomePage> {
 
     // Schedule a daily notification for testing (1 min from now)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await notificationHelper.showDailyReminder(
-        DateTime.now().hour,
-        DateTime.now().minute + 1,
-        context,
-      );
+      final now = DateTime.now();
+      int testMinute = now.minute + 1;
+      int testHour = now.hour;
+      if (testMinute >= 60) {
+        testMinute = 0;
+        testHour = (testHour + 1) % 24;
+      }
+      await notificationHelper.showDailyReminder(testHour, testMinute, context);
     });
   }
 
   void createNewHabit(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        content: TextField(
-          controller: textController,
-          decoration: const InputDecoration(hintText: "Create a new Habit"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              final newHabitName = textController.text.trim();
-              if (newHabitName.isNotEmpty) {
-                context.read<HabitDatabase>().addHabit(newHabitName);
-              }
-              Navigator.pop(context);
-              textController.clear();
-            },
-            child: const Text('Save'),
+      builder:
+          (context) => AlertDialog(
+            content: TextField(
+              controller: textController,
+              decoration: const InputDecoration(hintText: "Create a new Habit"),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  final newHabitName = textController.text.trim();
+                  if (newHabitName.isNotEmpty) {
+                    context.read<HabitDatabase>().addHabit(newHabitName);
+                  }
+                  Navigator.pop(context);
+                  textController.clear();
+                },
+                child: const Text('Save'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  textController.clear();
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              textController.clear();
-            },
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -79,67 +83,69 @@ class _HomePageState extends State<HomePage> {
     textController.text = habit.name;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        content: TextField(
-          controller: textController,
-          decoration: const InputDecoration(hintText: "Edit Habit Name"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              final updatedName = textController.text.trim();
-              if (updatedName.isNotEmpty) {
-                context.read<HabitDatabase>().updateHabitName(
+      builder:
+          (context) => AlertDialog(
+            content: TextField(
+              controller: textController,
+              decoration: const InputDecoration(hintText: "Edit Habit Name"),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  final updatedName = textController.text.trim();
+                  if (updatedName.isNotEmpty) {
+                    context.read<HabitDatabase>().updateHabitName(
                       habit.id,
                       updatedName,
                     );
-              }
-              Navigator.pop(context);
-              textController.clear();
-            },
-            child: const Text('Save'),
+                  }
+                  Navigator.pop(context);
+                  textController.clear();
+                },
+                child: const Text('Save'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  textController.clear();
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              textController.clear();
-            },
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
     );
   }
 
   void deleteHabitBox(Habit habit) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Habit'),
-        content: const Text('Are you sure you want to remove this habit?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              context.read<HabitDatabase>().deleteHabit(habit.id);
-              Navigator.pop(context);
-            },
-            child: const Text('Delete'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Habit'),
+            content: const Text('Are you sure you want to remove this habit?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  context.read<HabitDatabase>().deleteHabit(habit.id);
+                  Navigator.pop(context);
+                },
+                child: const Text('Delete'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Optional: Set daily reminder at a fixed time (8:30 PM)
+                  notificationHelper.showDailyReminder(20, 30, context);
+                },
+                child: const Text("Set Daily Reminder"),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Optional: Set daily reminder at a fixed time (8:30 PM)
-              notificationHelper.showDailyReminder(20, 30, context);
-            },
-            child: const Text("Set Daily Reminder"),
-          ),
-        ],
-      ),
     );
   }
 
@@ -160,9 +166,10 @@ class _HomePageState extends State<HomePage> {
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
             final habit = habits[index];
-            final completedDates = habit.completedDays
-                .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
-                .toList();
+            final completedDates =
+                habit.completedDays
+                    .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
+                    .toList();
             final isCompletedToday = isHabitCompletedToday(completedDates);
 
             return MyHabitTile(
@@ -226,7 +233,9 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Color.fromARGB(255, 125, 57, 214)),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 125, 57, 214),
+              ),
               child: Text(
                 'Mini Habit Tracker',
                 style: TextStyle(color: Colors.white, fontSize: 24),
