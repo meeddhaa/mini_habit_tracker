@@ -3,12 +3,12 @@ import 'package:mini_habit_tracker/components/my_habit_tile.dart';
 import 'package:mini_habit_tracker/components/my_heatmap.dart';
 import 'package:mini_habit_tracker/database/habit_database.dart';
 import 'package:mini_habit_tracker/pages/models/habit.dart';
+import 'package:mini_habit_tracker/pages/notepad_page.dart';
 import 'package:mini_habit_tracker/pages/progress_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:mini_habit_tracker/util/habit_util.dart';
-import 'package:provider/provider.dart';
 import 'package:mini_habit_tracker/util/notification_helper.dart';
-import 'package:mini_habit_tracker/pages/notepad_page.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -40,36 +40,75 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Helper method to clear controller after dialog actions
+  void _clearController() {
+    textController.clear();
+  }
+
+  // --- CREATE NEW HABIT DIALOG ---
+  // --- CREATE NEW HABIT DIALOG (USING BOTTOM SHEET) ---
   void createNewHabit(BuildContext context) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Create a new Habit"),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  final newHabitName = textController.text.trim();
-                  if (newHabitName.isNotEmpty) {
-                    context.read<HabitDatabase>().addHabit(newHabitName);
-                  }
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
+      // Makes the sheet adjust its size when the keyboard appears
+      isScrollControlled: true,
+      builder: (context) {
+        // Use Padding to ensure content is fully visible above the keyboard
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 20,
+            left: 20,
+            right: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // Keep column height minimal
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Add New Habit",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
+              const SizedBox(height: 15),
+              TextField(
+                controller: textController,
+                decoration: const InputDecoration(
+                  hintText: "Create a new Habit",
+                  border: OutlineInputBorder(),
+                ),
               ),
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // CANCEL BUTTON
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _clearController();
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  // SAVE BUTTON
+                  ElevatedButton(
+                    onPressed: () {
+                      final newHabitName = textController.text.trim();
+                      if (newHabitName.isNotEmpty) {
+                        context.read<HabitDatabase>().addHabit(newHabitName);
+                      }
+                      Navigator.pop(context);
+                      _clearController();
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10), // Add bottom padding
             ],
           ),
+        );
+      },
     );
   }
 
@@ -79,43 +118,53 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // --- EDIT HABIT DIALOG ---
   void editHabitBox(Habit habit) {
+    // Set controller text before showing dialog
     textController.text = habit.name;
+
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            content: TextField(
-              controller: textController,
-              decoration: const InputDecoration(hintText: "Edit Habit Name"),
+          (context) => SingleChildScrollView(
+            // Added scrollable wrapper
+            child: AlertDialog(
+              title: const Text("Edit Habit"),
+              content: TextField(
+                controller: textController,
+                decoration: const InputDecoration(hintText: "Edit Habit Name"),
+              ),
+              actions: [
+                // SAVE BUTTON
+                TextButton(
+                  onPressed: () {
+                    final updatedName = textController.text.trim();
+                    if (updatedName.isNotEmpty) {
+                      context.read<HabitDatabase>().updateHabitName(
+                        habit.id,
+                        updatedName,
+                      );
+                    }
+                    Navigator.pop(context); // Close dialog first
+                    _clearController(); // Then clear the controller
+                  },
+                  child: const Text('Save'),
+                ),
+                // CANCEL BUTTON
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close dialog first
+                    _clearController(); // Then clear the controller
+                  },
+                  child: const Text('Cancel'),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  final updatedName = textController.text.trim();
-                  if (updatedName.isNotEmpty) {
-                    context.read<HabitDatabase>().updateHabitName(
-                      habit.id,
-                      updatedName,
-                    );
-                  }
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Save'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  textController.clear();
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
           ),
     );
   }
 
+  // --- DELETE HABIT DIALOG ---
   void deleteHabitBox(Habit habit) {
     showDialog(
       context: context,
@@ -124,25 +173,37 @@ class _HomePageState extends State<HomePage> {
             title: const Text('Delete Habit'),
             content: const Text('Are you sure you want to remove this habit?'),
             actions: [
+              // Secondary Action Button (Set Reminder)
               TextButton(
                 onPressed: () {
-                  context.read<HabitDatabase>().deleteHabit(habit.id);
+                  // Optional: Set daily reminder at a fixed time (8:30 PM)
+                  notificationHelper.showDailyReminder(20, 30, context);
+                  // Added pop to close this dialog after setting the reminder
                   Navigator.pop(context);
                 },
-                child: const Text('Delete'),
+                child: const Text("Set Daily Reminder"),
               ),
+              // CANCEL BUTTON
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
                 child: const Text('Cancel'),
               ),
+              // DELETE BUTTON (Prominent and last)
               ElevatedButton(
                 onPressed: () {
-                  // Optional: Set daily reminder at a fixed time (8:30 PM)
-                  notificationHelper.showDailyReminder(20, 30, context);
+                  context.read<HabitDatabase>().deleteHabit(habit.id);
+                  Navigator.pop(context);
                 },
-                child: const Text("Set Daily Reminder"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      Colors.red, // Added red color for delete action
+                ),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -154,9 +215,15 @@ class _HomePageState extends State<HomePage> {
       builder: (context, db, _) {
         final habits = db.currentHabits;
         if (habits.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(20.0),
-            child: Center(child: Text("No habits yet? Add one!")),
+          // Centered text for when there are no habits
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40.0),
+              child: Text(
+                "No habits yet? Add one!",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
           );
         }
 
@@ -199,9 +266,6 @@ class _HomePageState extends State<HomePage> {
             final startDate = snapshot.data!;
             final heatmapData = prepHeatmapDataset(db.currentHabits);
 
-            // Optional debug print
-            // heatmapData.forEach((key, value) => print("Heatmap key: $key value: $value"));
-
             return MyHeatMap(startDate: startDate, datasets: heatmapData);
           },
         );
@@ -232,13 +296,16 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
+            DrawerHeader(
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 125, 57, 214),
+                color: Theme.of(context).colorScheme.primary, // Use theme color
               ),
               child: Text(
                 'Mini Habit Tracker',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 24,
+                ),
               ),
             ),
             ListTile(
@@ -268,6 +335,7 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
+                // Future settings screen navigation
               },
             ),
           ],
@@ -283,7 +351,7 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(16),
         children: [
           _buildHeatMap(),
-          const SizedBox(height: 10),
+          const SizedBox(height: 25), // Increased spacing
           _buildHabitList(),
         ],
       ),

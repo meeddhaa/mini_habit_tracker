@@ -18,7 +18,7 @@ android {
         applicationId = "com.medha.minihabittracker"
         
         // Increase minSdk to satisfy Firebase
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
