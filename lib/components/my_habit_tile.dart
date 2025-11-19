@@ -33,7 +33,7 @@ class _MyHabitTileState extends State<MyHabitTile> {
     isCompleted = widget.isHabitCompletedToday;
   }
 
-  // Use didUpdateWidget to ensure the state updates if the parent widget changes the completion status
+  //  didUpdateWidget to ensure the state updates if the parent widget changes the completion status
   @override
   void didUpdateWidget(covariant MyHabitTile oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -68,7 +68,7 @@ class _MyHabitTileState extends State<MyHabitTile> {
             // Edit option
             SlidableAction(
               onPressed: widget.editHabit,
-              backgroundColor: colorScheme.secondary, // Use secondary color
+              backgroundColor: colorScheme.secondary, //  secondary color
               foregroundColor: colorScheme.inversePrimary,
               icon: Icons.settings,
               borderRadius: BorderRadius.circular(16), // Larger radius for consistency
@@ -76,7 +76,7 @@ class _MyHabitTileState extends State<MyHabitTile> {
             // Delete option
             SlidableAction(
               onPressed: widget.deleteHabit,
-              backgroundColor: colorScheme.error, // Use theme error color (red)
+              backgroundColor: colorScheme.error, //  theme error color (red)
               foregroundColor: Colors.white,
               icon: Icons.delete,
               borderRadius: BorderRadius.circular(16), // Larger radius for consistency
@@ -93,9 +93,9 @@ class _MyHabitTileState extends State<MyHabitTile> {
               // Use Secondary color for uncompleted tile
               color: isCompleted
                   ? colorScheme.tertiary.withOpacity(0.2) // Subtle tint of the accent color when completed
-                  : colorScheme.secondary, 
+                  : colorScheme.secondary,
               
-              borderRadius: BorderRadius.circular(16), // Use a large, soft radius
+              borderRadius: BorderRadius.circular(16), //  a large, soft radius
               
               // Optional: Subtle shadow for lift in Light Mode
               boxShadow: colorScheme.brightness == Brightness.light && !isCompleted
@@ -114,7 +114,7 @@ class _MyHabitTileState extends State<MyHabitTile> {
               contentPadding: EdgeInsets.zero, // Remove ListTile's default padding
 
               leading: Checkbox(
-                // Use the theme's tertiary (violet accent) color
+                //  the theme's tertiary (violet accent) color
                 activeColor: colorScheme.tertiary,
                 checkColor: colorScheme.surface, // Checkmark color should contrast with the active color
                 value: isCompleted,
@@ -130,7 +130,7 @@ class _MyHabitTileState extends State<MyHabitTile> {
                       fontWeight: FontWeight.w600, // Slightly less bold for modern look
                       // Text color: Primary text color, but slightly dimmed if completed
                       color: isCompleted
-                          ? colorScheme.inversePrimary.withOpacity(0.6) 
+                          ? colorScheme.inversePrimary.withOpacity(0.6)
                           : colorScheme.inversePrimary,
                       decoration: isCompleted ? TextDecoration.lineThrough : null, // Strikethrough for completed
                       decorationThickness: 1.5,
@@ -141,8 +141,8 @@ class _MyHabitTileState extends State<MyHabitTile> {
                   Text(
                     '🔥 ${calculateStreak(widget.completedDays)} day streak',
                     style: TextStyle(
-                        // Use a softer, tertiary-toned color for the streak
-                        color: colorScheme.tertiary.withOpacity(0.8), 
+                        //  a softer, tertiary-toned color for the streak
+                        color: colorScheme.tertiary.withOpacity(0.8),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                     ),

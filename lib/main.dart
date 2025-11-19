@@ -1,9 +1,9 @@
+// lib/main.dart
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/database/firestore_habit_service.dart';
-
 import 'package:mini_habit_tracker/database/habit_database.dart';
-// Firestore service
 import 'package:mini_habit_tracker/pages/add_habit_page.dart';
 import 'package:mini_habit_tracker/pages/home_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
@@ -58,16 +58,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Mini Habit Tracker',
-      theme: themeProvider.themeData,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const HomePage(),
-        '/addHabit': (context) => const AddHabitPage(),
+    // CRUCIAL: Using Consumer guarantees that when the themeProvider's
+    // themeData changes (which it does right at startup), the MaterialApp rebuilds.
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Aesthetic VIOLET Tracker', // <-- Keep this title for verification!
+          
+          // The theme data is pulled here, ensuring the latest theme is used.
+          theme: themeProvider.themeData,
+          
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const HomePage(),
+            '/addHabit': (context) => const AddHabitPage(),
+          },
+        );
       },
     );
   }

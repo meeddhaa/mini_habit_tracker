@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mini_habit_tracker/pages/theme/dark_mode.dart';
-import 'package:mini_habit_tracker/pages/theme/light_mode.dart';
+
+// Use relative paths to ensure the *current* files are loaded
+import 'dark_mode.dart'; 
+import 'light_mode.dart';
 
 class ThemeProvider extends ChangeNotifier {
   // initially set to light mode
