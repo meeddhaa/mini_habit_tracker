@@ -1,13 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mini_habit_tracker/auth/auth_gate.dart'; // CRITICAL: The Authentication Listener
+import 'package:mini_habit_tracker/database/firestore_habit_service.dart';
 import 'package:mini_habit_tracker/database/habit_database.dart';
 import 'package:mini_habit_tracker/pages/add_habit_page.dart';
-import 'package:mini_habit_tracker/pages/home_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
-import 'package:mini_habit_tracker/util/notification_helper.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
 import 'package:timezone/data/latest.dart' as tz;
+
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -16,21 +16,28 @@ Future<void> main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize database
+  // --- ANONYMOUS SIGN-IN REMOVED ---
+  // The app now relies on the AuthGate to check for user login status.
+
+  // Initialize local database (Isar)
   await HabitDatabase.initialize();
   await HabitDatabase().saveFirstLaunchDate();
 
   // Initialize timezone
   tz.initializeTimeZones();
-  final notificationHelper = NotificationHelper();
-
-
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => HabitDatabase()),
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(
+          create: (context) => HabitDatabase(),
+        ), // Local Isar DB
+        Provider(
+          create: (context) => FirestoreHabitService(),
+        ), // Firestore service
+        ChangeNotifierProvider(
+          create: (context) => ThemeProvider(),
+        ), // Theme provider
       ],
       child: const MyApp(),
     ),
@@ -42,15 +49,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Mini Habit Tracker',
       theme: themeProvider.themeData,
-      initialRoute: '/',
+
+      // CRITICAL CHANGE: AuthGate is the entry point
+      // It decides whether to show the HomePage or LoginOrRegisterPage
+      home: const AuthGate(),
+
       routes: {
-        '/': (context) => const HomePage(),
         '/addHabit': (context) => const AddHabitPage(),
       },
     );
