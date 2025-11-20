@@ -25,8 +25,8 @@ class Habit {
 
   // Helper to get DateTime objects
   List<DateTime> getCompletedDays() {
-    return completedDays
-        .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
-        .toList();
+    return completedDays.map((ms) => DateTime.fromMillisecondsSinceEpoch(ms)).toList();
   }
 }
+
+

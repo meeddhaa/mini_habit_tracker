@@ -9,13 +9,13 @@ plugins {
 }
 
 android {
-    namespace = "com.medha.minihabittracker"
+    namespace = "com.example.mini_habit_tracker"
     
     // Use the highest SDK required by plugins
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.medha.minihabittracker"
+        applicationId = "com.example.mini_habit_tracker"
         
         // Increase minSdk to satisfy Firebase
         minSdk = 23

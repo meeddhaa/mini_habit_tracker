@@ -12,12 +12,7 @@
           "package_name": "com.example.mini_habit_tracker"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "523190900965-h5e8h7cumqjuubdv0csfa4canpj7kkdo.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
           "current_key": "AIzaSyBDUQSM6Udc3fw2mvcFjnC-DKDw9LxTnUo"
@@ -25,19 +20,7 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "523190900965-h5e8h7cumqjuubdv0csfa4canpj7kkdo.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "523190900965-g8tjbc2gff4b0pn2t6rh1mm7uc1bkkn6.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.miniHabitTracker"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     },
@@ -48,12 +31,7 @@
           "package_name": "com.medha.minihabittracker"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "523190900965-h5e8h7cumqjuubdv0csfa4canpj7kkdo.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
           "current_key": "AIzaSyBDUQSM6Udc3fw2mvcFjnC-DKDw9LxTnUo"
@@ -61,19 +39,7 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "523190900965-h5e8h7cumqjuubdv0csfa4canpj7kkdo.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "523190900965-g8tjbc2gff4b0pn2t6rh1mm7uc1bkkn6.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.miniHabitTracker"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

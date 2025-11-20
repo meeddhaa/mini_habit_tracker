@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-// Import intl package for better date formatting if needed, otherwise rely on your existing formatter
 
 class NotepadPage extends StatefulWidget {
   const NotepadPage({super.key});
@@ -35,77 +34,39 @@ class _NotepadPageState extends State<NotepadPage> {
     await prefs.setString('notes', jsonEncode(_notes));
   }
 
-  // Helper function to create the common Note Dialog structure
-  Widget _buildNoteDialog({
-    required BuildContext context,
-    required String title,
-    required TextEditingController controller,
-    required String actionText,
-    required VoidCallback onActionPressed,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return AlertDialog(
-      // Dialog shape inherited from ThemeData.dialogTheme or use shape: 
-      title: Text(title),
-      content: TextField(
-        controller: controller,
-        maxLines: null,
-        // Inherits rounded input decoration from the theme
-        decoration: InputDecoration(
-          hintText: 'Write something...',
-          // Explicitly set border to none if you want to rely on the theme fill
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: TextStyle(color: colorScheme.inversePrimary),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: onActionPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.tertiary, // Branded violet accent
-            foregroundColor: colorScheme.surface, // Text color (white/off-white)
-          ),
-          child: Text(actionText),
-        ),
-      ],
-    );
-  }
-
   void _addNote() {
     final TextEditingController controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => _buildNoteDialog(
-        context: context,
-        title: 'What are you thinking?',
-        controller: controller,
-        actionText: 'Add',
-        onActionPressed: () {
-          final text = controller.text.trim();
-          if (text.isNotEmpty) {
-            setState(() {
-              _notes.add({
-                'text': text,
-                'date': DateTime.now().toIso8601String(),
-              });
-              // Sort notes after adding a new one to keep the date display accurate
-              _notes.sort((a, b) => DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
-            });
-            _saveNotes();
-          }
-          Navigator.pop(context);
-        },
+      builder: (context) => AlertDialog(
+        title: const Text('What are you thinking?'),
+        content: TextField(
+          controller: controller,
+          maxLines: null,
+          decoration: const InputDecoration(hintText: 'Write something...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                setState(() {
+                  _notes.add({
+                    'text': text,
+                    'date': DateTime.now().toIso8601String(),
+                  });
+                });
+                _saveNotes();
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Add'),
+          ),
+        ],
       ),
     );
   }
@@ -116,29 +77,38 @@ class _NotepadPageState extends State<NotepadPage> {
         TextEditingController(text: note['text']);
     showDialog(
       context: context,
-      builder: (context) => _buildNoteDialog(
-        context: context,
-        title: 'Edit your thought',
-        controller: controller,
-        actionText: 'Save',
-        onActionPressed: () {
-          final text = controller.text.trim();
-          if (text.isNotEmpty) {
-            setState(() {
-              _notes[index]['text'] = text;
-              _notes[index]['date'] = DateTime.now().toIso8601String();
-            });
-            _saveNotes();
-          }
-          Navigator.pop(context);
-        },
+      builder: (context) => AlertDialog(
+        title: const Text('Edit your thought'),
+        content: TextField(
+          controller: controller,
+          maxLines: null,
+          decoration: const InputDecoration(hintText: 'Edit your note...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                setState(() {
+                  _notes[index]['text'] = text;
+                  _notes[index]['date'] = DateTime.now().toIso8601String();
+                });
+                _saveNotes();
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }
 
   void _deleteNote(int index) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -147,7 +117,7 @@ class _NotepadPageState extends State<NotepadPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colorScheme.inversePrimary)),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -157,10 +127,6 @@ class _NotepadPageState extends State<NotepadPage> {
               _saveNotes();
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.error, // Use theme's error color (red)
-              foregroundColor: colorScheme.surface,
-            ),
             child: const Text('Delete'),
           ),
         ],
@@ -169,9 +135,6 @@ class _NotepadPageState extends State<NotepadPage> {
   }
 
   Map<String, List<Map<String, dynamic>>> _groupNotesByDate() {
-    // Sort all notes descending before grouping to ensure the date key sorting is reliable
-    _notes.sort((a, b) => DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
-    
     Map<String, List<Map<String, dynamic>>> grouped = {};
 
     for (var note in _notes) {
@@ -183,20 +146,28 @@ class _NotepadPageState extends State<NotepadPage> {
       }
       grouped[key]!.add(note);
     }
-    return grouped;
+
+    // Sort dates descending
+    var sortedKeys = grouped.keys.toList()
+      ..sort((a, b) => DateTime.parse(grouped[b]![0]['date'])
+          .compareTo(DateTime.parse(grouped[a]![0]['date'])));
+    Map<String, List<Map<String, dynamic>>> sortedGrouped = {};
+    for (var k in sortedKeys) sortedGrouped[k] = grouped[k]!;
+
+    return sortedGrouped;
   }
 
   String _formatDate(DateTime date) {
     DateTime today = DateTime.now();
     DateTime yesterday = today.subtract(const Duration(days: 1));
-    DateTime noteDate = DateTime(date.year, date.month, date.day);
-    DateTime todayDate = DateTime(today.year, today.month, today.day);
-    DateTime yesterdayDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
 
-
-    if (noteDate.isAtSameMomentAs(todayDate)) {
+    if (date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day) {
       return 'Today';
-    } else if (noteDate.isAtSameMomentAs(yesterdayDate)) {
+    } else if (date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day) {
       return 'Yesterday';
     } else {
       return '${date.day}/${date.month}/${date.year}';
@@ -206,32 +177,14 @@ class _NotepadPageState extends State<NotepadPage> {
   @override
   Widget build(BuildContext context) {
     final groupedNotes = _groupNotesByDate();
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mood Diary'),
-        elevation: 0, // Aesthetic change: Remove shadow
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.inversePrimary,
       ),
       body: groupedNotes.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.lightbulb_outline, // A fitting icon
-                    size: 60,
-                    color: colorScheme.tertiary.withOpacity(0.6),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'No thoughts yet! Press + to record your first thought.',
-                    style: TextStyle(color: colorScheme.inversePrimary.withOpacity(0.7)),
-                  ),
-                ],
-              ),
+          ? const Center(
+              child: Text('No thoughts yet! Press + to add your thoughts.'),
             )
           : ListView(
               padding: const EdgeInsets.all(16),
@@ -242,72 +195,42 @@ class _NotepadPageState extends State<NotepadPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Aesthetic Date Header
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                      child: Text(
-                        date,
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.tertiary), // Use accent color
-                      ),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    
-                    // List of Notes for this day
+                    const SizedBox(height: 8),
                     ...notes.asMap().entries.map((noteEntry) {
                       final index = _notes.indexOf(noteEntry.value);
                       final note = noteEntry.value;
-                      final noteTime = DateTime.parse(note['date']);
-                      final formattedTime = '${noteTime.hour.toString().padLeft(2, '0')}:${noteTime.minute.toString().padLeft(2, '0')}';
-
                       return Card(
-                        // Card uses the theme's defined Border Radius (16)
-                        color: colorScheme.secondary,
-                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        margin: const EdgeInsets.symmetric(vertical: 6),
                         child: ListTile(
-                          title: Text(
-                            note['text'],
-                            style: TextStyle(
-                              color: colorScheme.inversePrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          subtitle: Text(
-                            formattedTime, // Display time of the thought
-                            style: TextStyle(
-                              color: colorScheme.inversePrimary.withOpacity(0.6),
-                              fontSize: 12,
-                            ),
-                          ),
+                          title: Text(note['text']),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Edit Button
                               IconButton(
-                                icon: Icon(Icons.edit, color: colorScheme.tertiary), // Branded icon color
+                                icon: const Icon(Icons.edit),
                                 onPressed: () => _editNote(index),
                               ),
-                              // Delete Button
                               IconButton(
-                                icon: Icon(Icons.delete, color: colorScheme.error), // Error color for danger
+                                icon: const Icon(Icons.delete),
                                 onPressed: () => _deleteNote(index),
                               ),
                             ],
                           ),
                         ),
                       );
-                    }),
-                    const SizedBox(height: 10),
+                    }).toList(),
+                    const SizedBox(height: 16),
                   ],
                 );
               }).toList(),
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addNote,
-        // Inherits background color from theme's floatingActionButtonTheme or uses tertiary color
-        backgroundColor: colorScheme.tertiary, 
-        foregroundColor: colorScheme.surface, // Icon color
         child: const Icon(Icons.add),
       ),
     );
