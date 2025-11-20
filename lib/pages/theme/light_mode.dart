@@ -66,7 +66,7 @@ final ThemeData lightMode = ThemeData(
     contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(10)),
-      borderSide: BorderSide(color: Color(0xFFDAD7D1)),
+      borderSide: BorderSide(color: Color.fromARGB(255, 210, 187, 141)),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(10)),

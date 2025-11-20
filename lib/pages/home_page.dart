@@ -238,7 +238,7 @@ class _HomePageState extends State<HomePage> {
               ),
               child: Text(
                 'Mini Habit Tracker',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontSize: 24),
               ),
             ),
             ListTile(
