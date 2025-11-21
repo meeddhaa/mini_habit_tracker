@@ -1,3 +1,4 @@
+// home_page.dart
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/components/my_habit_tile.dart';
 import 'package:mini_habit_tracker/components/my_heatmap.dart';
@@ -232,15 +233,22 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
+            
+            DrawerHeader(
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 125, 57, 214),
+                
+                color: Theme.of(context).colorScheme.primary,
               ),
               child: Text(
                 'Mini Habit Tracker',
-                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontSize: 24),
+                style: TextStyle(
+                  // 
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                  fontSize: 24,
+                ),
               ),
             ),
+            // END OF FIX
             ListTile(
               leading: const Icon(Icons.show_chart),
               title: const Text('Progress Analytics'),

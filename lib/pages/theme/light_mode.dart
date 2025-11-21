@@ -1,20 +1,22 @@
+// lib/pages/theme/light_mode.dart
 import 'package:flutter/material.dart';
 
-final ThemeData lightMode = ThemeData(
+// CRITICAL FIX: Changed to a getter (ThemeData get lightMode) to bypass caching
+ThemeData get lightMode => ThemeData(
   brightness: Brightness.light,
 
-  //  Color Palette 
-  colorScheme: ColorScheme(
+  // Color Palette 
+  colorScheme: const ColorScheme(
     brightness: Brightness.light,
-    primary: const Color(0xFF8C8C8C),       // MUJI warm grey
-    secondary: const Color(0xFFE5E2DB),     // Soft beige (linen tone)
-    surface: Colors.white,
-    background: const Color(0xFFF7F6F3),    // MUJI off-white
+    primary: Color(0xFF8C8C8C),       // MUJI warm grey (Used for DrawerHeader, main accents)
+    secondary: Color(0xFFE5E2DB),     // Soft beige (Used for interaction backgrounds)
+    surface: Colors.white,            // Card/Dialog background
+    background: Color(0xFFF7F6F3),    // MUJI off-white (Scaffold background)
     error: Colors.red,
-    onPrimary: Colors.white,
+    onPrimary: Colors.white,          // Text color on primary
     onSecondary: Colors.black87,
     onSurface: Colors.black87,
-    onBackground: Colors.black87,
+    onBackground: Colors.black87,     // Text color on scaffold
     onError: Colors.white,
   ),
 
@@ -38,10 +40,10 @@ final ThemeData lightMode = ThemeData(
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       elevation: 0,
-      backgroundColor: Color(0xFF8C8C8C),
+      backgroundColor: const Color(0xFF8C8C8C),
       foregroundColor: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-      shape: RoundedRectangleBorder(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
     ),
@@ -49,9 +51,9 @@ final ThemeData lightMode = ThemeData(
 
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
-      foregroundColor: Color(0xFF5A5A5A),
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      textStyle: TextStyle(
+      foregroundColor: const Color(0xFF5A5A5A),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      textStyle: const TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.5,
@@ -62,36 +64,36 @@ final ThemeData lightMode = ThemeData(
   // Text Fields
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: Color(0xFFEDEBE7), // warm beige white
-    contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+    fillColor: const Color(0xFFEDEBE7), // warm beige white
+    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.all(Radius.circular(10)),
-      borderSide: BorderSide(color: Color.fromARGB(255, 210, 187, 141)),
+      borderRadius: const BorderRadius.all(Radius.circular(10)),
+      borderSide: BorderSide(color: const Color.fromARGB(255, 210, 187, 141).withOpacity(0.5)),
     ),
-    enabledBorder: OutlineInputBorder(
+    enabledBorder: const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(10)),
       borderSide: BorderSide(color: Color(0xFFDAD7D1)),
     ),
-    focusedBorder: OutlineInputBorder(
+    focusedBorder: const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(10)),
       borderSide: BorderSide(color: Color(0xFF8C8C8C), width: 1),
     ),
-    hintStyle: TextStyle(color: Color(0xFF8F8F8F)),
+    hintStyle: const TextStyle(color: Color(0xFF8F8F8F)),
   ),
 
   // Cards
   cardTheme: CardTheme(
     color: Colors.white,
     elevation: 0,
-    margin: EdgeInsets.all(8),
+    margin: const EdgeInsets.all(8),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
-      side: BorderSide(color: Color(0xFFEAE7E2)),
+      side: const BorderSide(color: Color(0xFFEAE7E2)),
     ),
   ),
 
   // Typography
-  textTheme: TextTheme(
+  textTheme: const TextTheme(
     bodyMedium: TextStyle(
       fontSize: 15,
       color: Colors.black87,
@@ -112,7 +114,7 @@ final ThemeData lightMode = ThemeData(
   ),
 
   dividerColor: const Color(0xFFE0DDD6),
-  dividerTheme: DividerThemeData(
+  dividerTheme: const DividerThemeData(
     thickness: 0.8,
     color: Color(0xFFE0DDD6),
   ),

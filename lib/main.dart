@@ -58,15 +58,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // CRUCIAL: Using Consumer guarantees that when the themeProvider's
-    // themeData changes (which it does right at startup), the MaterialApp rebuilds.
+   
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Aesthetic VIOLET Tracker', // <-- Keep this title for verification!
+          title: 'Aesthetic VIOLET Tracker',
           
-          // The theme data is pulled here, ensuring the latest theme is used.
+          
           theme: themeProvider.themeData,
           
           initialRoute: '/',
