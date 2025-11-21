@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:mini_habit_tracker/pages/models/app_settings.dart';
 import 'package:mini_habit_tracker/pages/models/habit.dart';
+
+import 'package:mini_habit_tracker/pages/models/mood_entry.dart';
 import 'package:path_provider/path_provider.dart';
 
 class HabitDatabase extends ChangeNotifier {
@@ -13,8 +15,17 @@ class HabitDatabase extends ChangeNotifier {
     isar = await Isar.open([
       HabitSchema,
       AppSettingsSchema,
+      //  ADD MoodEntrySchema
+      MoodEntrySchema, 
     ], directory: dir.path);
   }
+
+  // List of habits in memory
+  final List<Habit> currentHabits = [];
+
+  
+  // HABIT CRUD OPERATIONS
+  
 
   // Save first launch date (for heatmap)
   Future<void> saveFirstLaunchDate() async {
@@ -30,9 +41,6 @@ class HabitDatabase extends ChangeNotifier {
     final settings = await isar.appSettings.where().findFirst();
     return settings?.firstLaunchDate;
   }
-
-  // List of habits in memory
-  final List<Habit> currentHabits = [];
 
   // CREATE - Add new habit
   Future<void> addHabit(String habitName) async {
@@ -104,5 +112,45 @@ class HabitDatabase extends ChangeNotifier {
     });
 
     await readHabits();
+  }
+
+  
+  // MOOD TRACKER OPERATIONS  ADDED
+  
+
+  // C - CREATE/UPDATE - Save/Update a mood entry for the current day
+  Future<void> saveMoodEntry(String moodEmoji, String note) async {
+    final now = DateTime.now();
+    // Get date only (midnight) for the unique index
+    final today = DateTime(now.year, now.month, now.day); 
+
+    await isar.writeTxn(() async {
+      // 1. Check if an entry for today already exists
+      MoodEntry? existingEntry = await isar.moodEntrys
+          .filter()
+          .dateEqualTo(today)
+          .findFirst();
+
+      if (existingEntry != null) {
+        // 2. Update existing entry
+        existingEntry.moodEmoji = moodEmoji;
+        existingEntry.note = note;
+        await isar.moodEntrys.put(existingEntry);
+      } else {
+        // 3. Create new entry
+        final newEntry = MoodEntry()
+          ..date = today
+          ..moodEmoji = moodEmoji
+          ..note = note;
+        await isar.moodEntrys.put(newEntry);
+      }
+    });
+
+    notifyListeners();
+  }
+
+  // R - READ - Load all mood entries for visualization
+  Future<List<MoodEntry>> readAllMoodEntries() async {
+    return await isar.moodEntrys.where().findAll();
   }
 }

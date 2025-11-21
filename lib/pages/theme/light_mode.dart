@@ -10,13 +10,11 @@ ThemeData get lightMode => ThemeData(
     brightness: Brightness.light,
     primary: Color(0xFF8C8C8C),       // MUJI warm grey (Used for DrawerHeader, main accents)
     secondary: Color(0xFFE5E2DB),     // Soft beige (Used for interaction backgrounds)
-    surface: Colors.white,            // Card/Dialog background
-    background: Color(0xFFF7F6F3),    // MUJI off-white (Scaffold background)
+    surface: Colors.white,    // MUJI off-white (Scaffold background)
     error: Colors.red,
     onPrimary: Colors.white,          // Text color on primary
     onSecondary: Colors.black87,
-    onSurface: Colors.black87,
-    onBackground: Colors.black87,     // Text color on scaffold
+    onSurface: Colors.black87,     // Text color on scaffold
     onError: Colors.white,
   ),
 

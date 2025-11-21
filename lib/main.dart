@@ -1,4 +1,4 @@
-// lib/main.dart
+// lib/main.dart (Changes applied only to the Firebase sign-in block)
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,8 @@ Future<void> main() async {
   try {
     await FirebaseAuth.instance.signInAnonymously();
   } catch (e) {
-    print('Firebase Auth failed: $e');
+    
+    debugPrint('Firebase Auth failed: $e'); 
     // Continue without authentication for now
   }
 
@@ -64,8 +65,6 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Aesthetic VIOLET Tracker',
-          
-          
           theme: themeProvider.themeData,
           
           initialRoute: '/',

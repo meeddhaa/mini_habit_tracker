@@ -1,4 +1,3 @@
-// home_page.dart
 import 'package:flutter/material.dart';
 import 'package:mini_habit_tracker/components/my_habit_tile.dart';
 import 'package:mini_habit_tracker/components/my_heatmap.dart';
@@ -7,9 +6,12 @@ import 'package:mini_habit_tracker/pages/models/habit.dart';
 import 'package:mini_habit_tracker/pages/progress_page.dart';
 import 'package:mini_habit_tracker/pages/theme/theme_provider.dart';
 import 'package:mini_habit_tracker/util/habit_util.dart';
+import 'package:mini_habit_tracker/util/habit_util.dart' as HabitUtil;
 import 'package:provider/provider.dart';
 import 'package:mini_habit_tracker/util/notification_helper.dart';
 import 'package:mini_habit_tracker/pages/notepad_page.dart';
+import 'package:mini_habit_tracker/util/mood_util.dart'; 
+import 'package:firebase_auth/firebase_auth.dart'; 
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,8 +21,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Existing Controllers
   final TextEditingController textController = TextEditingController();
   final NotificationHelper notificationHelper = NotificationHelper();
+
+  // Mood Tracker State and Controller
+  final TextEditingController moodNoteController = TextEditingController();
+  String? _selectedMood;
 
   @override
   void initState() {
@@ -40,6 +47,123 @@ class _HomePageState extends State<HomePage> {
       await notificationHelper.showDailyReminder(testHour, testMinute, context);
     });
   }
+  
+  
+  // MOOD TRACKER DIALOG
+  
+  
+  void showMoodTrackerDialog() {
+    _selectedMood = null;
+    moodNoteController.clear();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateInDialog) {
+            return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              title: const Text('How are you feeling today?'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // --- Mood Icon Selector ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: MoodUtil.moodOptions.map((emoji) {
+                        return GestureDetector(
+                          onTap: () {
+                            setStateInDialog(() { 
+                              _selectedMood = emoji;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _selectedMood == emoji 
+                                  ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _selectedMood == emoji 
+                                    ? Theme.of(context).colorScheme.primary 
+                                    : Theme.of(context).colorScheme.inversePrimary.withOpacity(0.2),
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(
+                              emoji,
+                              style: const TextStyle(fontSize: 35),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    
+                    const SizedBox(height: 16),
+
+                    // --- Optional Note Input ---
+                    TextField(
+                      controller: moodNoteController,
+                      decoration: InputDecoration(
+                        hintText: "Optional: Why do you feel this way?",
+                        hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.inversePrimary.withOpacity(0.6)
+                        ),
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                
+                // Save Button
+                ElevatedButton(
+                  onPressed: _selectedMood == null
+                      ? null
+                      : () {
+                          Provider.of<HabitDatabase>(context, listen: false)
+                              .saveMoodEntry(_selectedMood!, moodNoteController.text.trim());
+                          
+                          Navigator.pop(context);
+                        },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+  
+  
+  // LOG OUT METHOD
+  
+
+  void logOut() async {
+    await FirebaseAuth.instance.signOut();
+    
+    if (mounted) {
+      // Navigate to the root route, which should trigger the AuthGate or initial login screen
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/', 
+        (Route<dynamic> route) => false,
+      );
+    }
+  }
+
+  
+  // EXISTING HABIT CRUD METHODS
+  
 
   void createNewHabit(BuildContext context) {
     showDialog(
@@ -140,7 +264,6 @@ class _HomePageState extends State<HomePage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // Optional: Set daily reminder at a fixed time (8:30 PM)
                   notificationHelper.showDailyReminder(20, 30, context);
                 },
                 child: const Text("Set Daily Reminder"),
@@ -171,7 +294,7 @@ class _HomePageState extends State<HomePage> {
                 habit.completedDays
                     .map((ms) => DateTime.fromMillisecondsSinceEpoch(ms))
                     .toList();
-            final isCompletedToday = isHabitCompletedToday(completedDates);
+            final isCompletedToday = HabitUtil.isHabitCompletedToday(completedDates); 
 
             return MyHabitTile(
               text: habit.name,
@@ -198,10 +321,7 @@ class _HomePageState extends State<HomePage> {
             if (!snapshot.hasData) return Container();
 
             final startDate = snapshot.data!;
-            final heatmapData = prepHeatmapDataset(db.currentHabits);
-
-            // Optional debug print
-            // heatmapData.forEach((key, value) => print("Heatmap key: $key value: $value"));
+            final heatmapData = HabitUtil.prepHeatmapDataset(db.currentHabits); 
 
             return MyHeatMap(startDate: startDate, datasets: heatmapData);
           },
@@ -222,6 +342,14 @@ class _HomePageState extends State<HomePage> {
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Mini Habit Tracker'),
         actions: [
+          // Mood Tracker Button
+          IconButton(
+            icon: const Icon(Icons.mood_outlined),
+            onPressed: () => showMoodTrackerDialog(),
+          ),
+          
+          //  DELETE YOUR EXISTING LOG OUT ICON BUTTON HERE (if it exists) 
+          
           Switch(
             value: themeProvider.isDarkMode,
             onChanged: (value) => themeProvider.toggleTheme(),
@@ -242,13 +370,13 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 'Mini Habit Tracker',
                 style: TextStyle(
-                  // 
+                  
                   color: Theme.of(context).colorScheme.inversePrimary,
                   fontSize: 24,
                 ),
               ),
             ),
-            // END OF FIX
+            
             ListTile(
               leading: const Icon(Icons.show_chart),
               title: const Text('Progress Analytics'),
@@ -277,6 +405,12 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.pop(context);
               },
+            ),
+            // ✅ NEW: LOG OUT BUTTON MOVED TO DRAWER
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Log Out'),
+              onTap: logOut, // Calls the new logOut method
             ),
           ],
         ),
